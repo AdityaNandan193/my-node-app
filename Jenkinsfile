@@ -2,31 +2,29 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = 'adityanandan659/my-node-app'
+        DOCKER_IMAGE = 'adityanandan659/my-node-app' 
     }
 
     stages {
-        stage('Clone Repository') {
+        stage('Clone Repo') {
             steps {
-                git branch: 'main', url: 'https://github.com/AdityaNandan193/my-node-app.git'
+                 git branch: 'main', url: 'https://github.com/AdityaNandan193/my-node-app.git'
             }
         }
-
+        
         stage('Build Docker Image') {
             steps {
-                script {
-                    docker.build("${IMAGE_NAME}")
-                }
+                bat 'docker build -t %DOCKER_IMAGE% .'
             }
         }
-
-        stage('Push to Docker Hub') {
+        
+        stage('Push Docker Image to Docker Hub') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    script {
-                        bat  "echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin"
-                        bat "docker push %{IMAGE_NAME}%"
-                    }
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                    bat """
+                        echo %PASSWORD% | docker login -u %USERNAME% --password-stdin
+                        docker push %DOCKER_IMAGE%
+                    """
                 }
             }
         }
